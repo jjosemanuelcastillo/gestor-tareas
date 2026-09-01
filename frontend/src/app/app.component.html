@@ -1,0 +1,39 @@
+<div class="bg-white dark:bg-gray-800 min-h-screen">
+  <header class="relative flex justify-between items-center p-4">
+    <h1 class="text-gray-900 dark:text-white text-xl font-bold">Gestor de tareas</h1>
+
+    <button
+      (click)="toggleMenu()"
+      class="relative w-8 h-8 flex flex-col justify-center items-center gap-1.5"
+      aria-label="Abrir menú"
+    >
+      <span
+        class="block h-0.5 w-6 bg-gray-900 dark:bg-white transition-transform"
+        [class.rotate-45]="menuAbierto()"
+        [class.translate-y-2]="menuAbierto()"
+      ></span>
+      <span
+        class="block h-0.5 w-6 bg-gray-900 dark:bg-white transition-opacity"
+        [class.opacity-0]="menuAbierto()"
+      ></span>
+      <span
+        class="block h-0.5 w-6 bg-gray-900 dark:bg-white transition-transform"
+        [class.-rotate-45]="menuAbierto()"
+        [class.-translate-y-2]="menuAbierto()"
+      ></span>
+    </button>
+
+    @if (menuAbierto()) {
+      <div class="absolute right-4 top-14 bg-white dark:bg-gray-700 shadow-lg rounded p-3 flex flex-col gap-2 z-10">
+        <button
+          (click)="theme.toggleTheme()"
+          class="px-3 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white text-left whitespace-nowrap"
+        >
+          {{ theme.theme() === 'dark' ? '☀️ Modo claro' : '🌙 Modo oscuro' }}
+        </button>
+      </div>
+    }
+  </header>
+
+  <router-outlet></router-outlet>
+</div>
