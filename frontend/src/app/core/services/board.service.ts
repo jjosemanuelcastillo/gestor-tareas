@@ -11,7 +11,7 @@ export class BoardService {
   private baseUrl = 'http://localhost:8080/api/boards';
   constructor() { }
 
-  geAll(): Observable<Board[]>{
+  getAll(): Observable<Board[]>{
     return this.http.get<Board[]>(this.baseUrl);
   }
   getById(id: number): Observable<Board>{
