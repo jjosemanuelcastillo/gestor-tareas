@@ -1,1 +1,58 @@
-<p>board-list works!</p>
+<main class="max-w-5xl mx-auto p-4">
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mis tableros</h2>
+
+  <form (ngSubmit)="crearBoard()" class="flex flex-col sm:flex-row gap-2 mb-6">
+    <input
+      [(ngModel)]="nuevoNombre"
+      name="nombre"
+      placeholder="Nombre del tablero"
+      required
+      class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    />
+    <input
+      [(ngModel)]="nuevaDescripcion"
+      name="descripcion"
+      placeholder="Descripción (opcional)"
+      class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    />
+    <button
+      type="submit"
+      [disabled]="!nuevoNombre.trim()"
+      class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50"
+    >
+      + Crear tablero
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="mb-4 p-3 rounded bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="text-gray-500 dark:text-gray-400">Cargando tableros…</p>
+  } @else if (boards().length === 0 && !error()) {
+    <p class="text-gray-500 dark:text-gray-400">Todavía no hay tableros. Crea el primero arriba.</p>
+  } @else {
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (board of boards(); track board.id) {
+        <a
+          [routerLink]="['/boards', board.id]"
+          class="group relative block p-4 rounded-lg shadow bg-gray-100 dark:bg-gray-700 hover:shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white pr-8">{{ board.nombre }}</h3>
+          @if (board.descripcion) {
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ board.descripcion }}</p>
+          }
+          <button
+            (click)="borrarBoard(board, $event)"
+            class="absolute top-3 right-3 text-gray-400 hover:text-red-600"
+            aria-label="Borrar tablero"
+            title="Borrar tablero"
+          >
+            ✕
+          </button>
+        </a>
+      }
+    </div>
+  }
+</main>
