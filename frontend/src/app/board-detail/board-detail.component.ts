@@ -1,4 +1,5 @@
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { BoardService } from '../core/services/board.service';
 import { Board } from '../core/models/board.model';
@@ -7,7 +8,7 @@ import { TaskService } from '../core/services/task.service';
 
 @Component({
   selector: 'app-board-detail',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './board-detail.component.html',
   styleUrl: './board-detail.component.css',
 })
