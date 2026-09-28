@@ -51,4 +51,14 @@ export class BoardDetailComponent implements OnInit {
       },
     });
   }
+
+  cambiarEstado(task: Task, estado: string): void {
+  const actualizada: Task = { ...task, estado };   // todo igual, salvo el estado
+
+  this.taskService.update(task.id!, actualizada).subscribe({
+    next: guardada => this.tasks.update(lista =>
+      lista.map(t => t.id === guardada.id ? guardada : t)
+    )
+  });
+}
 }
