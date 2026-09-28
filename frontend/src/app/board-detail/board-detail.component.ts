@@ -53,12 +53,22 @@ export class BoardDetailComponent implements OnInit {
   }
 
   cambiarEstado(task: Task, estado: string): void {
-  const actualizada: Task = { ...task, estado };   // todo igual, salvo el estado
+    const actualizada: Task = { ...task, estado }; // todo igual, salvo el estado
 
-  this.taskService.update(task.id!, actualizada).subscribe({
-    next: guardada => this.tasks.update(lista =>
-      lista.map(t => t.id === guardada.id ? guardada : t)
-    )
-  });
-}
+    this.taskService.update(task.id!, actualizada).subscribe({
+      next: (guardada) =>
+        this.tasks.update((lista) =>
+          lista.map((t) => (t.id === guardada.id ? guardada : t)),
+        ),
+    });
+  }
+
+  borrarTarea(task: Task): void {
+    if (!confirm(`¿Borrar la tarea "${task.titulo}"?`)) return;
+
+    this.taskService.delete(task.id!).subscribe({
+      next: () =>
+        this.tasks.update((lista) => lista.filter((t) => t.id !== task.id)),
+    });
+  }
 }
