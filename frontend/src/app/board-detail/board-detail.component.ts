@@ -1,3 +1,4 @@
+import { User } from './../core/models/user.model';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
@@ -5,6 +6,7 @@ import { BoardService } from '../core/services/board.service';
 import { Board } from '../core/models/board.model';
 import { Task } from '../core/models/task.model';
 import { TaskService } from '../core/services/task.service';
+import { UserService } from '../core/services/user.service';
 
 @Component({
   selector: 'app-board-detail',
@@ -15,9 +17,13 @@ import { TaskService } from '../core/services/task.service';
 export class BoardDetailComponent implements OnInit {
   private boardService = inject(BoardService);
   private taskService = inject(TaskService);
+  private userService = inject(UserService);
+
   id = input.required<string>();
   board = signal<Board | null>(null);
   tasks = signal<Task[]>([]);
+  users = signal<User[]>([]);
+
   nuevoTitulo = '';
   nuevaDescripcion = '';
 
@@ -28,6 +34,10 @@ export class BoardDetailComponent implements OnInit {
 
     this.taskService.getAll(Number(this.id())).subscribe({
       next: (tasks) => this.tasks.set(tasks),
+    });
+
+    this.userService.getAll().subscribe({
+      next: (users) => this.users.set(users),
     });
   }
 
@@ -53,7 +63,7 @@ export class BoardDetailComponent implements OnInit {
   }
 
   cambiarEstado(task: Task, estado: string): void {
-    const actualizada: Task = { ...task, estado }; // todo igual, salvo el estado
+    const actualizada: Task = { ...task, estado };
 
     this.taskService.update(task.id!, actualizada).subscribe({
       next: (guardada) =>
@@ -69,6 +79,19 @@ export class BoardDetailComponent implements OnInit {
     this.taskService.delete(task.id!).subscribe({
       next: () =>
         this.tasks.update((lista) => lista.filter((t) => t.id !== task.id)),
+    });
+  }
+
+  asignarPersona(task: Task, userId: string): void {
+    const persona = this.users().find((u) => u.id == Number(userId));
+    const actualizada: Task = { ...task, assignedUser: persona };
+
+    //actualizar tarea
+    this.taskService.update(task.id!, actualizada).subscribe({
+      next: (guardada) =>
+        this.tasks.update((lista) =>
+          lista.map((t) => (t.id === guardada.id ? guardada : t)),
+        ),
     });
   }
 }

@@ -42,9 +42,13 @@
       }
 
       <div class="mt-3 flex justify-between items-center gap-3">
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          {{ task.assignedUser ? 'Asignada a ' + task.assignedUser.nombre : 'Sin asignar' }}
-        </p>
+        <select (change)="asignarPersona(task, $any($event.target).value)"
+          class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+          <option value="" [selected]="!task.assignedUser">Sin asignar</option>
+          @for (u of users(); track u.id) {
+          <option [value]="u.id" [selected]="u.id === task.assignedUser?.id">{{ u.nombre }}</option>
+          }
+        </select>
 
         <select [value]="task.estado" (change)="cambiarEstado(task, $any($event.target).value)"
           class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
