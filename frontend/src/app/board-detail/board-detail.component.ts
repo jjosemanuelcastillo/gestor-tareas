@@ -1,7 +1,14 @@
 import { User } from './../core/models/user.model';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  OnInit,
+  signal,
+  computed,
+} from '@angular/core';
 import { BoardService } from '../core/services/board.service';
 import { Board } from '../core/models/board.model';
 import { Task } from '../core/models/task.model';
@@ -23,6 +30,22 @@ export class BoardDetailComponent implements OnInit {
   board = signal<Board | null>(null);
   tasks = signal<Task[]>([]);
   users = signal<User[]>([]);
+
+  pendientes = computed(() =>
+    // se rellena sola
+    this.tasks().filter((t) => t.estado === 'pendiente'),
+  );
+
+  columnas = computed(() =>
+    [
+      { estado: 'pendiente', titulo: 'Pendiente' },
+      { estado: 'en_progreso', titulo: 'En progreso' },
+      { estado: 'completada', titulo: 'Completada' },
+    ].map((col) => ({
+      ...col,
+      tareas: this.tasks().filter((t) => t.estado === col.estado),
+    })),
+  );
 
   nuevoTitulo = '';
   nuevaDescripcion = '';
