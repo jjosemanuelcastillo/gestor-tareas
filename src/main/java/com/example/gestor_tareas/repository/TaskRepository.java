@@ -8,4 +8,6 @@ import com.example.gestor_tareas.model.*;
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
 	List<Task> findByBoardId(Long boardId);
+
+	void deleteByBoardId(Long boardId);
 }
