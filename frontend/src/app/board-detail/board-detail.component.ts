@@ -1,4 +1,4 @@
-import { User } from './../core/models/user.model';
+import { User } from '../core/models/user.model';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -30,11 +30,7 @@ export class BoardDetailComponent implements OnInit {
   board = signal<Board | null>(null);
   tasks = signal<Task[]>([]);
   users = signal<User[]>([]);
-
-  pendientes = computed(() =>
-    // se rellena sola
-    this.tasks().filter((t) => t.estado === 'pendiente'),
-  );
+  error = signal<string | null>(null);
 
   columnas = computed(() =>
     [
@@ -53,21 +49,34 @@ export class BoardDetailComponent implements OnInit {
   ngOnInit(): void {
     this.boardService.getById(Number(this.id())).subscribe({
       next: (board) => this.board.set(board),
+      error: (err) =>
+        this.error.set(
+          err.status === 404
+            ? 'Este tablero no existe.'
+            : 'No se pudo conectar con el servidor. ¿Está arrancado el backend?',
+        ),
     });
 
     this.taskService.getAll(Number(this.id())).subscribe({
       next: (tasks) => this.tasks.set(tasks),
+      // "e ?? ..." : solo pone este mensaje si no hay ya otro error más importante
+      error: () =>
+        this.error.update((e) => e ?? 'No se pudieron cargar las tareas.'),
     });
 
     this.userService.getAll().subscribe({
       next: (users) => this.users.set(users),
+      error: () =>
+        this.error.update((e) => e ?? 'No se pudieron cargar las personas.'),
     });
   }
 
-  crearTarea() {
+  crearTarea(): void {
     const titulo = this.nuevoTitulo.trim();
 
     if (!titulo) return;
+
+    this.error.set(null);
 
     const nueva: Task = {
       titulo,
@@ -82,39 +91,51 @@ export class BoardDetailComponent implements OnInit {
         this.nuevoTitulo = ''; // vaciar el formulario
         this.nuevaDescripcion = '';
       },
+      error: () => this.error.set('No se pudo crear la tarea.'),
     });
   }
 
-  cambiarEstado(task: Task, estado: string): void {
-    const actualizada: Task = { ...task, estado };
+  cambiarEstado(task: Task, select: HTMLSelectElement): void {
+    const actualizada: Task = { ...task, estado: select.value };
 
+    this.error.set(null);
     this.taskService.update(task.id!, actualizada).subscribe({
       next: (guardada) =>
         this.tasks.update((lista) =>
           lista.map((t) => (t.id === guardada.id ? guardada : t)),
         ),
+      error: () => {
+        this.error.set('No se pudo cambiar el estado.');
+        select.value = task.estado; // el desplegable vuelve al estado real
+      },
     });
   }
 
   borrarTarea(task: Task): void {
     if (!confirm(`¿Borrar la tarea "${task.titulo}"?`)) return;
 
+    this.error.set(null);
     this.taskService.delete(task.id!).subscribe({
       next: () =>
         this.tasks.update((lista) => lista.filter((t) => t.id !== task.id)),
+      error: () => this.error.set('No se pudo borrar la tarea.'),
     });
   }
 
-  asignarPersona(task: Task, userId: string): void {
-    const persona = this.users().find((u) => u.id == Number(userId));
+  asignarPersona(task: Task, select: HTMLSelectElement): void {
+    const persona = this.users().find((u) => u.id === Number(select.value));
     const actualizada: Task = { ...task, assignedUser: persona };
 
-    //actualizar tarea
+    this.error.set(null);
     this.taskService.update(task.id!, actualizada).subscribe({
       next: (guardada) =>
         this.tasks.update((lista) =>
           lista.map((t) => (t.id === guardada.id ? guardada : t)),
         ),
+      error: () => {
+        this.error.set('No se pudo asignar la persona.');
+        select.value = String(task.assignedUser?.id ?? ''); // vuelve a la persona real
+      },
     });
   }
 }
