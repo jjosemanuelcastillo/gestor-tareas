@@ -114,12 +114,12 @@ Hay pasos que **solo puedes hacer tú**, porque son tu cuenta y tus contraseñas
 
 ### Fase 1: backend preparado para producción
 
-1. [ ] `application.properties`: puerto, CORS y datos de la base de datos leídos de variables de entorno, con valores por defecto para local.
-2. [ ] `application-prod.properties`: sin `show-sql`, sin traza en los errores.
-3. [ ] `CorsConfig` con los orígenes desde `CORS_ORIGINS`.
-4. [ ] Actuator con `/actuator/health` público.
-5. [ ] `Dockerfile` y `.dockerignore`. Probar que la imagen se construye y arranca.
-6. [ ] Tests: el CORS configurable y que `/actuator/health` responde sin token.
+1. [x] `application.properties`: puerto, CORS y datos de la base de datos leídos de variables de entorno, con valores por defecto para local.
+2. [x] `application-prod.properties`: sin `show-sql`, sin traza en los errores.
+3. [x] `CorsConfig` con los orígenes desde `CORS_ORIGINS`.
+4. [x] Actuator con `/actuator/health` público.
+5. [x] `Dockerfile` y `.dockerignore`. Probar que la imagen se construye y arranca.
+6. [x] Tests: el CORS configurable y que `/actuator/health` responde sin token.
 
 ### Fase 2: frontend preparado para producción
 

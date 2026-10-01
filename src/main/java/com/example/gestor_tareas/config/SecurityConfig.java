@@ -40,6 +40,8 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+						// Para que Render compruebe si el backend está vivo (solo dice UP o DOWN)
+						.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 						.requestMatchers("/error").permitAll()
 						.anyRequest().authenticated())
 				// Lee el token de "Authorization: Bearer ..." y comprueba su firma y su caducidad
