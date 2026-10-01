@@ -150,10 +150,11 @@ Hoy hay 2 tableros sin dueño y 2 personas (jose y carmen) sin contraseña.
 
 ### Fase 2: backend, cada uno lo suyo
 
-1. [ ] `BoardService`: el dueño se pone en el servidor; listar, ver, editar y borrar solo los propios (si no → 404).
-2. [ ] `TaskService`: lo mismo para las tareas, a través de su tablero.
-3. [ ] Los controladores pasan a usar los servicios.
-4. [ ] Tests: un usuario no puede ver ni tocar los tableros ni las tareas de otro.
+1. [x] `BoardService`: el dueño se pone en el servidor; listar, ver, editar y borrar solo los propios (si no → 404).
+2. [x] `TaskService`: lo mismo para las tareas, a través de su tablero.
+3. [x] Los controladores pasan a usar los servicios.
+4. [x] Tests: un usuario no puede ver ni tocar los tableros ni las tareas de otro.
+5. [x] DTOs de entrada y salida para tableros y tareas, con validación (nombre y título obligatorios, estado solo `pendiente`, `en_progreso` o `completada`). Las respuestas no llevan el dueño ni el email de las personas.
 
 ### Fase 3: frontend, entrar y salir
 
