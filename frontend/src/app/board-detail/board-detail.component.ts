@@ -14,6 +14,7 @@ import { Board } from '../core/models/board.model';
 import { Task } from '../core/models/task.model';
 import { TaskService } from '../core/services/task.service';
 import { UserService } from '../core/services/user.service';
+import { ConfirmService } from '../core/services/confirm.service';
 
 @Component({
   selector: 'app-board-detail',
@@ -25,6 +26,7 @@ export class BoardDetailComponent implements OnInit {
   private boardService = inject(BoardService);
   private taskService = inject(TaskService);
   private userService = inject(UserService);
+  private confirm = inject(ConfirmService);
 
   id = input.required<string>();
   board = signal<Board | null>(null);
@@ -111,8 +113,14 @@ export class BoardDetailComponent implements OnInit {
     });
   }
 
-  borrarTarea(task: Task): void {
-    if (!confirm(`¿Borrar la tarea "${task.titulo}"?`)) return;
+  async borrarTarea(task: Task): Promise<void> {
+    const ok = await this.confirm.pedir({
+      titulo: 'Borrar tarea',
+      mensaje: `Se borrará la tarea "${task.titulo}". Esto no se puede deshacer.`,
+      textoConfirmar: 'Borrar',
+      peligro: true,
+    });
+    if (!ok) return;
 
     this.error.set(null);
     this.taskService.delete(task.id!).subscribe({

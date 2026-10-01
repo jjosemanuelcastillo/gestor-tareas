@@ -7,6 +7,7 @@ import { BoardDetailComponent } from './board-detail.component';
 import { Board } from '../core/models/board.model';
 import { Task } from '../core/models/task.model';
 import { User } from '../core/models/user.model';
+import { ConfirmService } from '../core/services/confirm.service';
 
 describe('BoardDetailComponent', () => {
   const api = 'http://localhost:8080/api';
@@ -162,12 +163,13 @@ describe('BoardDetailComponent', () => {
     req.flush({ ...tareas[0], assignedUser: null });
   });
 
-  it('should delete a task after confirming', () => {
+  it('should delete a task after confirming', async () => {
     cargar();
-    spyOn(window, 'confirm').and.returnValue(true);
+    const pedir = spyOn(TestBed.inject(ConfirmService), 'pedir').and.resolveTo(true);
 
-    component.borrarTarea(tareas[1]);
+    await component.borrarTarea(tareas[1]);
 
+    expect(pedir).toHaveBeenCalledWith(jasmine.objectContaining({ peligro: true }));
     const req = httpMock.expectOne(`${api}/tasks/11`);
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
@@ -175,11 +177,11 @@ describe('BoardDetailComponent', () => {
     expect(component.tasks().map((t) => t.id)).toEqual([10, 12]);
   });
 
-  it('should not delete a task if the user cancels', () => {
+  it('should not delete a task if the user cancels', async () => {
     cargar();
-    spyOn(window, 'confirm').and.returnValue(false);
+    spyOn(TestBed.inject(ConfirmService), 'pedir').and.resolveTo(false);
 
-    component.borrarTarea(tareas[1]);
+    await component.borrarTarea(tareas[1]);
 
     httpMock.expectNone(`${api}/tasks/11`);
     expect(component.tasks().length).toBe(3);

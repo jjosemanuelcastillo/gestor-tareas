@@ -1,0 +1,37 @@
+<dialog #dialogo (cancel)="alCancelar($event)" (click)="alPulsarFondo($event)"
+  aria-labelledby="confirm-titulo" aria-describedby="confirm-mensaje"
+  class="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl shadow-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+    backdrop:bg-gray-900/60 backdrop:backdrop-blur-sm
+    transition duration-150 starting:open:opacity-0 starting:open:scale-95">
+  @if (confirm.peticion(); as p) {
+  <div class="p-6">
+    <div class="flex items-start gap-4">
+      @if (p.peligro) {
+      <div aria-hidden="true"
+        class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+          <path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" />
+        </svg>
+      </div>
+      }
+      <div>
+        <h2 id="confirm-titulo" class="text-lg font-semibold">{{ p.titulo }}</h2>
+        <p id="confirm-mensaje" class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ p.mensaje }}</p>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+      <button type="button" autofocus (click)="confirm.responder(false)"
+        class="px-4 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 font-medium">
+        Cancelar
+      </button>
+      <button type="button" (click)="confirm.responder(true)"
+        class="px-4 py-2 rounded font-medium text-white"
+        [class]="p.peligro ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'">
+        {{ p.textoConfirmar ?? 'Aceptar' }}
+      </button>
+    </div>
+  </div>
+  }
+</dialog>

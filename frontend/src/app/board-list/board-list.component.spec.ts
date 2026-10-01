@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { BoardListComponent } from './board-list.component';
 import { Board } from '../core/models/board.model';
+import { ConfirmService } from '../core/services/confirm.service';
 
 describe('BoardListComponent', () => {
   const baseUrl = 'http://localhost:8080/api/boards';
@@ -79,12 +80,14 @@ describe('BoardListComponent', () => {
     httpMock.expectNone(baseUrl);
   });
 
-  it('should delete a board after confirming', () => {
+  it('should delete a board after confirming', async () => {
     httpMock.expectOne(baseUrl).flush(tableros);
-    spyOn(window, 'confirm').and.returnValue(true); // el usuario pulsa "Aceptar"
+    // el usuario pulsa "Borrar" en la ventana de confirmación
+    const pedir = spyOn(TestBed.inject(ConfirmService), 'pedir').and.resolveTo(true);
 
-    component.borrarBoard(tableros[0], new Event('click'));
+    await component.borrarBoard(tableros[0], new Event('click'));
 
+    expect(pedir).toHaveBeenCalledWith(jasmine.objectContaining({ peligro: true }));
     const req = httpMock.expectOne(`${baseUrl}/1`);
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
@@ -92,11 +95,11 @@ describe('BoardListComponent', () => {
     expect(component.boards().map((b) => b.id)).toEqual([2]);
   });
 
-  it('should not delete a board if the user cancels', () => {
+  it('should not delete a board if the user cancels', async () => {
     httpMock.expectOne(baseUrl).flush(tableros);
-    spyOn(window, 'confirm').and.returnValue(false); // el usuario pulsa "Cancelar"
+    spyOn(TestBed.inject(ConfirmService), 'pedir').and.resolveTo(false); // pulsa "Cancelar"
 
-    component.borrarBoard(tableros[0], new Event('click'));
+    await component.borrarBoard(tableros[0], new Event('click'));
 
     httpMock.expectNone(`${baseUrl}/1`);
     expect(component.boards().length).toBe(2);
