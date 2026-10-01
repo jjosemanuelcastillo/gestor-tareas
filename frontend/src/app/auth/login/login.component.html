@@ -1,0 +1,60 @@
+<main class="flex justify-center px-4 py-8 sm:py-16">
+  <div class="w-full max-w-sm">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Iniciar sesión</h2>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Entra para ver tus tableros.</p>
+
+    @if (motivo() === 'caducada') {
+    <p role="status" class="mt-4 p-3 rounded text-sm bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200">
+      Tu sesión ha caducado. Vuelve a iniciar sesión.
+    </p>
+    }
+
+    @if (error()) {
+    <p role="alert" class="mt-4 p-3 rounded text-sm bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200">
+      {{ error() }}
+    </p>
+    }
+
+    <form (ngSubmit)="entrar()" novalidate class="mt-6 flex flex-col gap-4">
+      <div>
+        <label for="email" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" [(ngModel)]="email"
+          [attr.aria-invalid]="!!errores()['email']" [attr.aria-describedby]="errores()['email'] ? 'email-error' : null"
+          class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          [class]="errores()['email'] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'" />
+        @if (errores()['email']) {
+        <p id="email-error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errores()['email'] }}</p>
+        }
+      </div>
+
+      <div>
+        <label for="password" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Contraseña</label>
+        <div class="relative">
+          <input id="password" name="password" [type]="mostrarPassword() ? 'text' : 'password'"
+            autocomplete="current-password" [(ngModel)]="password"
+            [attr.aria-invalid]="!!errores()['password']"
+            [attr.aria-describedby]="errores()['password'] ? 'password-error' : null"
+            class="w-full pl-3 pr-20 py-2 rounded border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            [class]="errores()['password'] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'" />
+          <button type="button" (click)="mostrarPassword.set(!mostrarPassword())" [attr.aria-pressed]="mostrarPassword()"
+            class="absolute inset-y-0 right-0 px-3 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+            {{ mostrarPassword() ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+        @if (errores()['password']) {
+        <p id="password-error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errores()['password'] }}</p>
+        }
+      </div>
+
+      <button type="submit" [disabled]="enviando()"
+        class="mt-2 w-full px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50">
+        {{ enviando() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <p class="mt-6 text-sm text-center text-gray-600 dark:text-gray-300">
+      ¿No tienes cuenta?
+      <a routerLink="/registro" class="inline-block py-2 font-medium text-blue-600 dark:text-blue-400 hover:underline">Crear cuenta</a>
+    </p>
+  </div>
+</main>

@@ -1,0 +1,65 @@
+<main class="flex justify-center px-4 py-8 sm:py-16">
+  <div class="w-full max-w-sm">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Crear cuenta</h2>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Organiza tus tareas en tableros.</p>
+
+    @if (error()) {
+    <p role="alert" class="mt-4 p-3 rounded text-sm bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200">
+      {{ error() }}
+    </p>
+    }
+
+    <form (ngSubmit)="crearCuenta()" novalidate class="mt-6 flex flex-col gap-4">
+      <div>
+        <label for="nombre" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Nombre</label>
+        <input id="nombre" name="nombre" type="text" autocomplete="name" [(ngModel)]="nombre"
+          [attr.aria-invalid]="!!errores()['nombre']" [attr.aria-describedby]="errores()['nombre'] ? 'nombre-error' : null"
+          class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          [class]="errores()['nombre'] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'" />
+        @if (errores()['nombre']) {
+        <p id="nombre-error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errores()['nombre'] }}</p>
+        }
+      </div>
+
+      <div>
+        <label for="email" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" [(ngModel)]="email"
+          [attr.aria-invalid]="!!errores()['email']" [attr.aria-describedby]="errores()['email'] ? 'email-error' : null"
+          class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          [class]="errores()['email'] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'" />
+        @if (errores()['email']) {
+        <p id="email-error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errores()['email'] }}</p>
+        }
+      </div>
+
+      <div>
+        <label for="password" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Contraseña</label>
+        <div class="relative">
+          <input id="password" name="password" [type]="mostrarPassword() ? 'text' : 'password'"
+            autocomplete="new-password" [(ngModel)]="password"
+            [attr.aria-invalid]="!!errores()['password']" aria-describedby="password-ayuda"
+            class="w-full pl-3 pr-20 py-2 rounded border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            [class]="errores()['password'] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'" />
+          <button type="button" (click)="mostrarPassword.set(!mostrarPassword())" [attr.aria-pressed]="mostrarPassword()"
+            class="absolute inset-y-0 right-0 px-3 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+            {{ mostrarPassword() ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+        <p id="password-ayuda" class="mt-1 text-sm"
+          [class]="errores()['password'] ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'">
+          {{ errores()['password'] ? errores()['password'] : 'Mínimo ' + passwordMinima + ' caracteres.' }}
+        </p>
+      </div>
+
+      <button type="submit" [disabled]="enviando()"
+        class="mt-2 w-full px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50">
+        {{ enviando() ? 'Creando cuenta…' : 'Crear cuenta' }}
+      </button>
+    </form>
+
+    <p class="mt-6 text-sm text-center text-gray-600 dark:text-gray-300">
+      ¿Ya tienes cuenta?
+      <a routerLink="/login" class="inline-block py-2 font-medium text-blue-600 dark:text-blue-400 hover:underline">Iniciar sesión</a>
+    </p>
+  </div>
+</main>

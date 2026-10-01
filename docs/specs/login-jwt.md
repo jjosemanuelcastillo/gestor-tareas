@@ -158,11 +158,11 @@ Hoy hay 2 tableros sin dueño y 2 personas (jose y carmen) sin contraseña.
 
 ### Fase 3: frontend, entrar y salir
 
-1. [ ] `AuthService`, interceptor y guards.
-2. [ ] Pantallas de inicio de sesión y registro (Tailwind, modo oscuro, responsive).
-3. [ ] Rutas protegidas y redirecciones.
-4. [ ] Cabecera con el nombre y "Cerrar sesión". Aviso de "sesión caducada".
-5. [ ] Tests de lo anterior.
+1. [x] `AuthService`, interceptor y guards.
+2. [x] Pantallas de inicio de sesión y registro (Tailwind, modo oscuro, responsive).
+3. [x] Rutas protegidas y redirecciones.
+4. [x] Cabecera con el nombre y "Cerrar sesión". Aviso de "sesión caducada".
+5. [x] Tests de lo anterior.
 
 ### Fase 4: cierre
 
