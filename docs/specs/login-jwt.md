@@ -1,6 +1,6 @@
 # Especificación: registro e inicio de sesión con JWT
 
-> Estado: **aprobada**: decisiones del punto 6 tomadas el 2026-10-01.
+> Estado: **implementada** (fases 1 a 4). Decisiones del punto 6 tomadas el 2026-10-01.
 > Esta especificación se escribe antes de programar (SDD). Primero se revisa y se ajusta; después se implementa tarea por tarea, con un commit por fase.
 
 ## 1. Objetivo
@@ -166,9 +166,10 @@ Hoy hay 2 tableros sin dueño y 2 personas (jose y carmen) sin contraseña.
 
 ### Fase 4: cierre
 
-1. [ ] Probarlo todo de punta a punta con dos cuentas distintas.
-2. [ ] Actualizar el `README` (cómo funciona el login, la variable `JWT_SECRET`) y el `CLAUDE.md`.
-3. [ ] Añadir a los apuntes lo aprendido.
+1. [x] Probarlo todo de punta a punta con dos cuentas distintas.
+2. [x] Actualizar el `README` (cómo funciona el login, la variable `JWT_SECRET`) y el `CLAUDE.md`.
+3. [x] Añadir a los apuntes lo aprendido.
+4. [ ] Pull Request de `feature/login-jwt` a `master` y unirlo.
 
 ## 6. Decisiones
 

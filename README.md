@@ -1,33 +1,61 @@
 # Gestor de tareas
 
-Un gestor de tareas estilo Trello: creas tableros, dentro de cada tablero añades tareas, y a cada tarea le puedes asignar un estado y una persona responsable.
+Un gestor de tareas estilo Trello: creas una cuenta, organizas tu trabajo en tableros y, dentro de cada tablero, mueves las tareas entre **Pendiente**, **En progreso** y **Completada**.
 
-Es un proyecto personal para practicar un backend REST con Spring Boot y conectarlo a un frontend real en Angular, en vez de dejarlo solo en Postman.
+Es un proyecto personal para practicar una aplicación completa: una API REST con Spring Boot protegida con JWT y un frontend en Angular que la consume.
 
 ## Qué hace
 
-- Crear tableros (`Board`) y ver la lista de tareas que contiene cada uno.
-- Crear, editar, borrar y cambiar el estado de una tarea dentro de un tablero (`pendiente`, `en_progreso`, `completada`).
-- Asignar una tarea a un usuario (`User`) de una lista simple de personas.
-- Modo oscuro con memoria (recuerda tu preferencia aunque cierres el navegador).
+- **Cuentas de usuario:** registro e inicio de sesión con email y contraseña. La sesión se mantiene al recargar y caduca a las 8 horas.
+- **Cada persona ve solo lo suyo:** tus tableros y tus tareas no los puede ver ni tocar nadie más.
+- **Tableros:** crear, abrir y borrar (al borrar un tablero se borran sus tareas).
+- **Tareas en tres columnas** según su estado: crear, cambiar de estado, asignar a una persona y borrar.
+- Ventana de confirmación propia antes de borrar, avisos cuando algo falla y **modo oscuro** que recuerda tu preferencia.
+- **Responsive:** se adapta a móvil, tablet y ordenador.
 
-De momento no hay login ni cuentas de usuario reales — los `User` son solo personas a las que se les puede asignar una tarea, no cuentas con las que inicias sesión.
+## Seguridad
+
+- Contraseñas cifradas con **BCrypt**; nunca salen en ninguna respuesta de la API.
+- Autenticación sin sesiones en el servidor, con **tokens JWT** firmados (HS256) que caducan a las 8 horas.
+- El login responde igual (mismo mensaje y mismo tiempo) si el email no existe o si la contraseña está mal, para no revelar qué emails tienen cuenta.
+- Cada consulta comprueba que el tablero o la tarea sean del usuario; si no lo son, la API responde 404, como si no existieran.
+- La clave que firma los tokens no está en el código: se lee de la variable de entorno `JWT_SECRET`.
+- Validación de los datos en el frontend y, de nuevo, en el backend.
 
 ## Stack técnico
 
 **Backend**
-- Java 17 + Spring Boot
-- Spring Data JPA / Hibernate
-- MySQL
-- Lombok
+
+- Java 17 + Spring Boot 4
+- Spring Security con OAuth2 Resource Server (validación de JWT)
+- Spring Data JPA / Hibernate + MySQL
+- Bean Validation, Lombok
+- Tests con JUnit 5, MockMvc y H2 en memoria
 
 **Frontend**
-- Angular 19 (componentes standalone)
-- Tailwind CSS
+
+- Angular 19 (componentes standalone, signals)
+- Tailwind CSS 4
+- Tests con Jasmine + Karma
+
+## Arquitectura
+
+```text
+Angular (localhost:4200)                      Spring Boot (localhost:8080)
+┌──────────────────────────────┐             ┌───────────────────────────────────────┐
+│ Pantallas (login, tableros…) │             │ Controller  →  Service  →  Repository │
+│ Servicios HTTP               │  JSON+JWT   │   (DTOs)      (¿es tuyo?)    (JPA)    │
+│ Interceptor: añade el token  │ ──────────▶ │ Spring Security comprueba el token     │
+│ Guards: rutas con sesión     │             └───────────────────┬───────────────────┘
+└──────────────────────────────┘                                 │
+                                                              MySQL
+```
+
+El diseño del login se escribió antes de programarlo, en [docs/specs/login-jwt.md](docs/specs/login-jwt.md).
 
 ## Cómo ejecutarlo en local
 
-Necesitas tener MySQL corriendo en local, con una base de datos llamada `gestor_tareas` creada (las tablas las crea Hibernate solas al arrancar, no hace falta crear el esquema a mano).
+Necesitas **Java 17**, **Node.js** y **MySQL** corriendo en `localhost:3306` con una base de datos llamada `gestor_tareas` (las tablas las crea Hibernate al arrancar).
 
 **Backend** (desde la raíz del proyecto):
 
@@ -51,33 +79,46 @@ Arranca en `http://localhost:8080`. Revisa `src/main/resources/application.prope
 
 ```bash
 npm install
-ng serve
+npm start
 ```
 
-Arranca en `http://localhost:4200`.
+Arranca en `http://localhost:4200`. La primera vez, crea una cuenta desde la pantalla de registro.
+
+## Tests
+
+```bash
+./mvnw test                                                    # backend (no necesita MySQL: usa H2 en memoria)
+cd frontend && npx ng test --watch=false --browsers=ChromeHeadless   # frontend
+```
+
+Incluyen casos de seguridad: que sin token la API responde 401, que un usuario no puede ver ni modificar lo de otro, y que el frontend cierra la sesión cuando el token caduca.
 
 ## Endpoints de la API
 
+Todas las rutas necesitan la cabecera `Authorization: Bearer <token>`, salvo el registro y el login.
+
 | Método | Ruta | Qué hace |
-|---|---|---|
-| GET | `/api/boards` | Lista todos los tableros |
-| GET | `/api/boards/{id}` | Un tablero por id (404 si no existe) |
-| POST | `/api/boards` | Crea un tablero |
-| PUT | `/api/boards/{id}` | Actualiza un tablero |
-| DELETE | `/api/boards/{id}` | Borra un tablero |
-| GET | `/api/tasks?boardId={id}` | Tareas de un tablero concreto |
-| GET | `/api/tasks/{id}` | Una tarea por id (404 si no existe) |
-| POST | `/api/tasks` | Crea una tarea |
-| PUT | `/api/tasks/{id}` | Actualiza una tarea |
-| DELETE | `/api/tasks/{id}` | Borra una tarea |
-| GET | `/api/users` | Lista todos los usuarios |
-| POST | `/api/users` | Crea un usuario |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Crea una cuenta y devuelve `{ token, usuario }` (201) |
+| POST | `/api/auth/login` | Inicia sesión y devuelve `{ token, usuario }` |
+| GET | `/api/auth/me` | El usuario de la sesión |
+| GET | `/api/boards` | Tus tableros |
+| GET | `/api/boards/{id}` | Uno de tus tableros |
+| POST | `/api/boards` | Crea un tablero (el dueño eres tú) |
+| PUT | `/api/boards/{id}` | Edita uno de tus tableros |
+| DELETE | `/api/boards/{id}` | Borra uno de tus tableros y sus tareas |
+| GET | `/api/tasks?boardId={id}` | Tareas de uno de tus tableros |
+| GET | `/api/tasks/{id}` | Una de tus tareas |
+| POST | `/api/tasks` | Crea una tarea en uno de tus tableros |
+| PUT | `/api/tasks/{id}` | Edita una de tus tareas (estado, persona asignada…) |
+| DELETE | `/api/tasks/{id}` | Borra una de tus tareas |
+| GET | `/api/users` | Personas a las que se puede asignar una tarea (solo id y nombre) |
 
-Pedir un id que no existe devuelve `404` con un cuerpo JSON explicando el error, no un `200` vacío.
+Los errores devuelven JSON con `{ timestamp, status, message }` y, si los datos no son válidos (400), un campo `errores` que indica qué campo falla y por qué. Códigos: 400 datos no válidos, 401 sin sesión o credenciales incorrectas, 404 no existe o no es tuyo, 409 email ya registrado.
 
-## Qué falta
+## Próximas mejoras
 
-- Autenticación real (login, permisos por usuario).
-- Tests automatizados.
-- Interfaz para gestionar usuarios desde la propia app (ahora mismo se gestionan directo en la base de datos).
-- Capturas de pantalla aquí en el README cuando el frontend esté más avanzado.
+- Compartir un tablero con otras personas (ahora mismo puedes asignar una tarea a cualquiera, pero solo la ve el dueño del tablero).
+- Desplegar la aplicación para poder probarla desde un enlace.
+- Editar el nombre de un tablero y los datos de una tarea desde la interfaz.
+- Capturas de pantalla en este README.

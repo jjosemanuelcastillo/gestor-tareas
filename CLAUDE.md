@@ -4,17 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Proyecto
 
-Gestor de tareas estilo Trello: tableros (`Board`) con tareas (`Task`) que tienen un estado y un usuario asignado (`User`). Es un monorepo con un backend REST en Spring Boot en la raíz y un frontend Angular 19 en `frontend/`. No hay autenticación: los `User` son solo personas asignables, no cuentas.
+Gestor de tareas estilo Trello con cuentas de usuario: cada `User` se registra e inicia sesión (JWT) y gestiona **solo sus** tableros (`Board`, con `owner`) y las tareas (`Task`) de esos tableros. Una tarea tiene estado y puede asignarse a cualquier usuario registrado. Es un monorepo con un backend REST en Spring Boot en la raíz y un frontend Angular 19 en `frontend/`. El diseño del login está en `docs/specs/login-jwt.md`.
 
-El código, los nombres de campos y los mensajes están en español (`nombre`, `descripcion`, `titulo`, `estado`); hay que mantener esa convención.
+El código, los nombres de campos y los mensajes están en español (`nombre`, `descripcion`, `titulo`, `estado`); hay que mantener esa convención. Los nombres de los tests (`it(...)`, métodos `@Test`) están en inglés.
 
 ## Comandos
 
-**Backend** (desde la raíz; requiere MySQL en `localhost:3306` con la base de datos `gestor_tareas` creada, usuario `root` sin contraseña; ver `src/main/resources/application.properties`):
+**Backend** (desde la raíz). Requiere MySQL en `localhost:3306` con la base de datos `gestor_tareas` (usuario `root` sin contraseña; ver `src/main/resources/application.properties`) y la clave JWT en `.env.properties` (copiar `.env.properties.example`; está en el `.gitignore`) o en la variable de entorno `JWT_SECRET`. Sin ella la aplicación no arranca.
 
 ```bash
 ./mvnw spring-boot:run          # arranca en http://localhost:8080
-./mvnw test                     # tests (solo existe el test de carga de contexto, que necesita MySQL)
+./mvnw test                     # tests: usan H2 en memoria (src/test/resources), no necesitan MySQL
 ./mvnw test -Dtest=NombreDeLaClase#metodo   # un solo test
 ./mvnw package
 ```
@@ -27,8 +27,8 @@ En Windows se puede usar `mvnw.cmd` en lugar de `./mvnw`.
 npm install
 npm start                       # ng serve → http://localhost:4200
 npm run build
-npm test                        # Karma + Jasmine (abre Chrome)
-npx ng test --include=src/app/core/services/task.service.spec.ts   # un solo spec
+npx ng test --watch=false --browsers=ChromeHeadless                        # todos los tests, sin ventana
+npx ng test --watch=false --browsers=ChromeHeadless --include=src/app/core/services/task.service.spec.ts   # un solo spec
 ```
 
 `.claude/launch.json` define la configuración de preview `frontend` (`npm --prefix frontend start`, puerto 4200).
@@ -37,19 +37,27 @@ npx ng test --include=src/app/core/services/task.service.spec.ts   # un solo spe
 
 ### Backend (`src/main/java/com/example/gestor_tareas/`)
 
-- Capas mínimas: **controller → repository**, sin capa de servicio ni DTOs. Los controladores inyectan el `JpaRepository` directamente y serializan/deserializan las entidades JPA tal cual.
-- Entidades con Lombok (`@Getter @Setter @NoArgsConstructor`). Relaciones `@ManyToOne`: `Task.board`, `Task.assignedUser` y `Board.owner` → `User`. No hay relaciones inversas (`Board` no tiene lista de tareas); las tareas de un tablero se obtienen con `GET /api/tasks?boardId=` (`TaskRepository.findByBoardId`).
-- `Task.estado` es un `String` libre; los valores esperados son `pendiente`, `en_progreso` y `completada`.
-- Esquema gestionado por Hibernate (`ddl-auto=update`): no hay migraciones.
-- Errores: los controladores lanzan `ResourceNotFoundException`, que `GlobalExceptionHandler` convierte en un 404 con cuerpo JSON `{timestamp, status, message}`. Si se añaden errores nuevos, conviene seguir ese patrón.
-- CORS (`config/CorsConfig`) solo permite `http://localhost:4200` en `/api/**` con GET/POST/PUT/DELETE. Si se añade otro método u origen, hay que actualizarlo.
-- `pom.xml` usa Spring Boot 4.x (starter `spring-boot-starter-webmvc`, no `-web`) con Java 17, y Lombok configurado como annotation processor en el `maven-compiler-plugin`.
+- Capas: **controller → service → repository**. Los controladores sacan el id del usuario del token (`@AuthenticationPrincipal Jwt jwt` → `Long.valueOf(jwt.getSubject())`) y delegan en `BoardService`/`TaskService`, que hacen las comprobaciones de propiedad.
+- Propiedad: un tablero es tuyo si `owner` eres tú (`BoardRepository.findByIdAndOwnerId`); una tarea, si su tablero es tuyo (`TaskRepository.findByIdAndBoardOwnerId`). Si no es tuyo → `ResourceNotFoundException` (404), nunca 403. El `owner` lo pone siempre el servidor. Al crear/editar una tarea se comprueba que el tablero de destino sea tuyo.
+- DTOs en `dto/` (records): entrada con Bean Validation (`BoardRequest`, `TaskRequest`, `RegisterRequest`, `LoginRequest`; las referencias van como `IdRef { id }`) y salida sin datos sensibles (`BoardResponse` sin owner, `TaskResponse` con `assignedUser` como `PersonaResponse {id, nombre}`, `UserResponse`, `AuthResponse {token, usuario}`). Las entidades JPA no se serializan directamente; `User.password` lleva además `@JsonIgnore`.
+- Seguridad (`config/SecurityConfig`): stateless, CSRF desactivado, solo `POST /api/auth/register` y `/api/auth/login` son públicos; el resto exige JWT (OAuth2 Resource Server con `NimbusJwtDecoder`, HS256, clave de `app.jwt.secret` = `${JWT_SECRET}`). `TokenService` firma los tokens (`sub` = id del usuario, caducidad `app.jwt.expiration` = 8h). Contraseñas con BCrypt. El 401 se devuelve en JSON desde un `AuthenticationEntryPoint`.
+- CORS (`config/CorsConfig`): un `CorsConfigurationSource` que permite `http://localhost:4200` en `/api/**` y la cabecera `Authorization`.
+- `AuthService`: email normalizado (trim + minúsculas), 409 si está repetido, y en el login el mismo mensaje y tiempo (compara contra un hash falso) si el email no existe.
+- Errores (`exception/GlobalExceptionHandler`): JSON `{timestamp, status, message}`; 400 de validación añade `errores: {campo: mensaje}`; 401 credenciales, 404 no encontrado/no es tuyo, 409 email repetido.
+- Entidades con Lombok. Relaciones `@ManyToOne` sin inversas: `Task.board`, `Task.assignedUser`, `Board.owner`. Borrar un tablero borra antes sus tareas (`TaskRepository.deleteByBoardId`, en una transacción).
+- `Task.estado` es un `String` validado con `@Pattern` (`pendiente|en_progreso|completada`). Esquema gestionado por Hibernate (`ddl-auto=update`), sin migraciones.
+- Tests: `@SpringBootTest` + `@AutoConfigureMockMvc` (paquete `org.springframework.boot.webmvc.test.autoconfigure` en Boot 4) contra H2; `AuthControllerTest` y `OwnershipTest` (dos usuarios).
+- `pom.xml`: Spring Boot 4.x (`spring-boot-starter-webmvc`, `spring-boot-starter-security-oauth2-resource-server`) con Java 17 y Lombok como annotation processor.
 
 ### Frontend (`frontend/src/app/`)
 
-- Componentes standalone, sin NgModules. `app.config.ts` registra `provideRouter(routes, withComponentInputBinding())` y `provideHttpClient()`.
-- Rutas: `''` → `BoardListComponent`, `boards/:id` → `BoardDetailComponent`. Gracias a `withComponentInputBinding`, el parámetro `:id` llega como `input.required<string>()` y hay que convertirlo con `Number(...)`.
-- `core/models/` contiene interfaces que replican las entidades JPA (mismos nombres de campo en español, `id?` opcional). Al cambiar una entidad del backend hay que actualizar su modelo.
-- `core/services/` tiene un servicio por recurso, con `inject(HttpClient)` y la URL base `http://localhost:8080/api/...` escrita en cada servicio (no hay `environment`). Los nombres de los métodos no son uniformes: `BoardService` usa `createBoard/updateBoard/deleteBoard` y `TaskService` usa `create/update/delete`.
-- Estado local con signals (`signal`, `update`) y formularios con `FormsModule`/`ngModel`.
-- Estilos: Tailwind CSS v4 mediante PostCSS (`.postcssrc.json`, `@import "tailwindcss"` en `styles.css`). No existe `tailwind.config`. El modo oscuro usa la clase `.dark` en `<html>` (`@custom-variant dark`), que gestiona `ThemeService` con un signal + `effect` y persiste en `localStorage`.
+- Componentes standalone. `app.config.ts`: `provideRouter(routes, withComponentInputBinding())` y `provideHttpClient(withInterceptors([authInterceptor]))`.
+- Sesión: `core/services/auth.service.ts` guarda `token` y `usuario` en `localStorage`, expone `usuario` (signal) y `estaAutenticado()` (lee el `exp` del token). `core/interceptors/auth.interceptor.ts` añade `Authorization: Bearer` solo a `http://localhost:8080/api/` (no al login/registro) y, ante un 401, llama a `logout('caducada')`.
+- Rutas: `login` y `registro` con `invitadoGuard`; `''` (`BoardListComponent`) y `boards/:id` (`BoardDetailComponent`) con `authGuard`, que redirige a `/login?volver=...` (el login solo vuelve a rutas internas). Los parámetros de ruta y query llegan como `input()` gracias a `withComponentInputBinding`.
+- `core/models/` replica los DTOs del backend. `core/services/` tiene un servicio por recurso con la URL `http://localhost:8080/api/...` escrita en cada uno (no hay `environment`). Nombres no uniformes: `BoardService` usa `createBoard/updateBoard/deleteBoard` y `TaskService` usa `create/update/delete`.
+- `core/utils/error-api.ts` convierte los errores del backend en `{mensaje, campos}` para los formularios.
+- `ConfirmService` + `shared/confirm-dialog` sustituyen a `confirm()`: el diálogo está una vez en `app.component.html` y `pedir()` devuelve `Promise<boolean>`.
+- El PUT de tareas debe enviar la tarea completa (`{ ...task, campo }`), porque el backend sobrescribe todos los campos.
+- Estado local con signals (`signal`, `computed`, `update`) y formularios con `FormsModule`/`ngModel`.
+- Estilos: Tailwind CSS v4 mediante PostCSS (`@import "tailwindcss"` en `styles.css`, sin `tailwind.config`). El modo oscuro usa la clase `.dark` en `<html>` (`ThemeService`). Cada color lleva su variante `dark:`, y en móvil los campos usan `text-base` y las zonas táctiles miden 40 px o más.
+- Tests: Jasmine + Karma con `HttpTestingController`. `core/testing/token-de-prueba.ts` fabrica tokens y sesiones de prueba. `tsconfig.json` referencia `tsconfig.app.json` y `tsconfig.spec.json` para que el editor reconozca Jasmine en los `.spec.ts`.
