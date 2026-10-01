@@ -169,7 +169,7 @@ Hoy hay 2 tableros sin dueño y 2 personas (jose y carmen) sin contraseña.
 1. [x] Probarlo todo de punta a punta con dos cuentas distintas.
 2. [x] Actualizar el `README` (cómo funciona el login, la variable `JWT_SECRET`) y el `CLAUDE.md`.
 3. [x] Añadir a los apuntes lo aprendido.
-4. [ ] Pull Request de `feature/login-jwt` a `master` y unirlo.
+4. [x] Pull Request de `feature/login-jwt` a `master` y unirlo (#2).
 
 ## 6. Decisiones
 

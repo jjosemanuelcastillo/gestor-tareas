@@ -41,23 +41,32 @@ npx ng test --watch=false --browsers=ChromeHeadless --include=src/app/core/servi
 - Propiedad: un tablero es tuyo si `owner` eres tú (`BoardRepository.findByIdAndOwnerId`); una tarea, si su tablero es tuyo (`TaskRepository.findByIdAndBoardOwnerId`). Si no es tuyo → `ResourceNotFoundException` (404), nunca 403. El `owner` lo pone siempre el servidor. Al crear/editar una tarea se comprueba que el tablero de destino sea tuyo.
 - DTOs en `dto/` (records): entrada con Bean Validation (`BoardRequest`, `TaskRequest`, `RegisterRequest`, `LoginRequest`; las referencias van como `IdRef { id }`) y salida sin datos sensibles (`BoardResponse` sin owner, `TaskResponse` con `assignedUser` como `PersonaResponse {id, nombre}`, `UserResponse`, `AuthResponse {token, usuario}`). Las entidades JPA no se serializan directamente; `User.password` lleva además `@JsonIgnore`.
 - Seguridad (`config/SecurityConfig`): stateless, CSRF desactivado, solo `POST /api/auth/register` y `/api/auth/login` son públicos; el resto exige JWT (OAuth2 Resource Server con `NimbusJwtDecoder`, HS256, clave de `app.jwt.secret` = `${JWT_SECRET}`). `TokenService` firma los tokens (`sub` = id del usuario, caducidad `app.jwt.expiration` = 8h). Contraseñas con BCrypt. El 401 se devuelve en JSON desde un `AuthenticationEntryPoint`.
-- CORS (`config/CorsConfig`): un `CorsConfigurationSource` que permite `http://localhost:4200` en `/api/**` y la cabecera `Authorization`.
+- CORS (`config/CorsConfig`): un `CorsConfigurationSource` en `/api/**` con los orígenes de `app.cors.allowed-origins` = `${CORS_ORIGINS:http://localhost:4200}` (lista separada por comas) y la cabecera `Authorization`.
+- Actuator: solo `/actuator/health` está publicado (y es público), sin detalles.
 - `AuthService`: email normalizado (trim + minúsculas), 409 si está repetido, y en el login el mismo mensaje y tiempo (compara contra un hash falso) si el email no existe.
 - Errores (`exception/GlobalExceptionHandler`): JSON `{timestamp, status, message}`; 400 de validación añade `errores: {campo: mensaje}`; 401 credenciales, 404 no encontrado/no es tuyo, 409 email repetido.
 - Entidades con Lombok. Relaciones `@ManyToOne` sin inversas: `Task.board`, `Task.assignedUser`, `Board.owner`. Borrar un tablero borra antes sus tareas (`TaskRepository.deleteByBoardId`, en una transacción).
 - `Task.estado` es un `String` validado con `@Pattern` (`pendiente|en_progreso|completada`). Esquema gestionado por Hibernate (`ddl-auto=update`), sin migraciones.
-- Tests: `@SpringBootTest` + `@AutoConfigureMockMvc` (paquete `org.springframework.boot.webmvc.test.autoconfigure` en Boot 4) contra H2; `AuthControllerTest` y `OwnershipTest` (dos usuarios).
+- Tests: `@SpringBootTest` + `@AutoConfigureMockMvc` (paquete `org.springframework.boot.webmvc.test.autoconfigure` en Boot 4) contra H2; `AuthControllerTest`, `OwnershipTest` (dos usuarios) y `ProductionConfigTest` (CORS y actuator).
 - `pom.xml`: Spring Boot 4.x (`spring-boot-starter-webmvc`, `spring-boot-starter-security-oauth2-resource-server`) con Java 17 y Lombok como annotation processor.
 
 ### Frontend (`frontend/src/app/`)
 
-- Componentes standalone. `app.config.ts`: `provideRouter(routes, withComponentInputBinding())` y `provideHttpClient(withInterceptors([authInterceptor]))`.
-- Sesión: `core/services/auth.service.ts` guarda `token` y `usuario` en `localStorage`, expone `usuario` (signal) y `estaAutenticado()` (lee el `exp` del token). `core/interceptors/auth.interceptor.ts` añade `Authorization: Bearer` solo a `http://localhost:8080/api/` (no al login/registro) y, ante un 401, llama a `logout('caducada')`.
+- Componentes standalone. `app.config.ts`: `provideRouter(routes, withComponentInputBinding())` y `provideHttpClient(withInterceptors([authInterceptor, servidorLentoInterceptor]))`.
+- URL de la API: `environment.apiUrl` (`src/environments/environment.ts` para local; `environment.prod.ts`, con la URL de Render, lo sustituye en `ng build` mediante `fileReplacements`). No escribir URLs a mano en los servicios.
+- Sesión: `core/services/auth.service.ts` guarda `token` y `usuario` en `localStorage`, expone `usuario` (signal) y `estaAutenticado()` (lee el `exp` del token). `core/interceptors/auth.interceptor.ts` añade `Authorization: Bearer` solo a las peticiones a `${environment.apiUrl}/` (no al login/registro) y, ante un 401, llama a `logout('caducada')`.
+- `servidor-lento.interceptor.ts` + `ServidorService`: si una petición tarda más de 4 s, `app.component` muestra el aviso "Despertando el servidor…" (el plan gratuito de Render se duerme).
 - Rutas: `login` y `registro` con `invitadoGuard`; `''` (`BoardListComponent`) y `boards/:id` (`BoardDetailComponent`) con `authGuard`, que redirige a `/login?volver=...` (el login solo vuelve a rutas internas). Los parámetros de ruta y query llegan como `input()` gracias a `withComponentInputBinding`.
-- `core/models/` replica los DTOs del backend. `core/services/` tiene un servicio por recurso con la URL `http://localhost:8080/api/...` escrita en cada uno (no hay `environment`). Nombres no uniformes: `BoardService` usa `createBoard/updateBoard/deleteBoard` y `TaskService` usa `create/update/delete`.
+- `core/models/` replica los DTOs del backend. `core/services/` tiene un servicio por recurso (`${environment.apiUrl}/...`). Nombres no uniformes: `BoardService` usa `createBoard/updateBoard/deleteBoard` y `TaskService` usa `create/update/delete`.
 - `core/utils/error-api.ts` convierte los errores del backend en `{mensaje, campos}` para los formularios.
 - `ConfirmService` + `shared/confirm-dialog` sustituyen a `confirm()`: el diálogo está una vez en `app.component.html` y `pedir()` devuelve `Promise<boolean>`.
 - El PUT de tareas debe enviar la tarea completa (`{ ...task, campo }`), porque el backend sobrescribe todos los campos.
 - Estado local con signals (`signal`, `computed`, `update`) y formularios con `FormsModule`/`ngModel`.
 - Estilos: Tailwind CSS v4 mediante PostCSS (`@import "tailwindcss"` en `styles.css`, sin `tailwind.config`). El modo oscuro usa la clase `.dark` en `<html>` (`ThemeService`). Cada color lleva su variante `dark:`, y en móvil los campos usan `text-base` y las zonas táctiles miden 40 px o más.
 - Tests: Jasmine + Karma con `HttpTestingController`. `core/testing/token-de-prueba.ts` fabrica tokens y sesiones de prueba. `tsconfig.json` referencia `tsconfig.app.json` y `tsconfig.spec.json` para que el editor reconozca Jasmine en los `.spec.ts`.
+
+## Despliegue (ver `docs/specs/despliegue.md`)
+
+- Frontend en Vercel (<https://gestor-tareas-nine-phi.vercel.app>, Root Directory `frontend`, `vercel.json` con rewrites a `index.html`). Backend en Render (<https://gestor-tareas-api-gp5g.onrender.com>) con el `Dockerfile` de la raíz. MySQL en Aiven. Ambos se despliegan solos con cada push a `master`.
+- Producción se configura con variables de entorno en Render: `SPRING_DATASOURCE_*`, `JWT_SECRET`, `CORS_ORIGINS`, `SPRING_PROFILES_ACTIVE=prod` (`application-prod.properties`). Los secretos nunca van al repositorio.
+- CI: `.github/workflows/tests.yml` (tests de backend y frontend, `ng build` y `docker build`) en cada push a `master`/`feature/**` y en cada PR.

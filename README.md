@@ -6,6 +6,10 @@ Un gestor de tareas estilo Trello: creas una cuenta, organizas tu trabajo en tab
 
 Es un proyecto personal para practicar una aplicación completa: una API REST con Spring Boot protegida con JWT y un frontend en Angular que la consume.
 
+**🔗 Demo: [gestor-tareas-nine-phi.vercel.app](https://gestor-tareas-nine-phi.vercel.app)**: crea una cuenta y pruébala.
+
+> Está en planes gratuitos: si nadie la ha usado en los últimos 15 minutos, el servidor está dormido y **la primera petición tarda hasta un minuto** (la app avisa con *"Despertando el servidor…"*). Después va a velocidad normal.
+
 ## Qué hace
 
 - **Cuentas de usuario:** registro e inicio de sesión con email y contraseña. La sesión se mantiene al recargar y caduca a las 8 horas.
@@ -23,10 +27,11 @@ Es un proyecto personal para practicar una aplicación completa: una API REST co
 - Cada consulta comprueba que el tablero o la tarea sean del usuario; si no lo son, la API responde 404, como si no existieran.
 - La clave que firma los tokens no está en el código: se lee de la variable de entorno `JWT_SECRET`.
 - Validación de los datos en el frontend y, de nuevo, en el backend.
+- En producción: todo por HTTPS, CORS solo para el dominio del frontend, errores sin la traza de Java y solo `/actuator/health` publicado.
 
 ## Stack técnico
 
-**Backend**
+### Backend
 
 - Java 17 + Spring Boot 4
 - Spring Security con OAuth2 Resource Server (validación de JWT)
@@ -34,7 +39,7 @@ Es un proyecto personal para practicar una aplicación completa: una API REST co
 - Bean Validation, Lombok
 - Tests con JUnit 5, MockMvc y H2 en memoria
 
-**Frontend**
+### Frontend
 
 - Angular 19 (componentes standalone, signals)
 - Tailwind CSS 4
@@ -53,7 +58,31 @@ Angular (localhost:4200)                      Spring Boot (localhost:8080)
                                                               MySQL
 ```
 
-El diseño del login se escribió antes de programarlo, en [docs/specs/login-jwt.md](docs/specs/login-jwt.md).
+El diseño del login y el del despliegue se escribieron antes de programarlos, en [docs/specs/login-jwt.md](docs/specs/login-jwt.md) y [docs/specs/despliegue.md](docs/specs/despliegue.md).
+
+## Despliegue
+
+```text
+Navegador ──▶ Vercel (Angular) ──https + JWT──▶ Render (Spring Boot en Docker) ──SSL──▶ Aiven (MySQL)
+```
+
+| Parte | Dónde | Cómo se actualiza |
+| --- | --- | --- |
+| Frontend | **Vercel** | Solo, con cada push a `master` (usa `frontend/vercel.json`) |
+| Backend | **Render**, con el `Dockerfile` | Solo, con cada push a `master` |
+| Base de datos | **Aiven for MySQL** | — |
+| Tests | **GitHub Actions** | En cada push y en cada Pull Request |
+
+El código es el mismo que en local; lo que cambia son las **variables de entorno** que se ponen en el panel de Render (y que nunca se suben a GitHub):
+
+| Variable | Para qué |
+| --- | --- |
+| `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD` | Conexión a la base de datos de Aiven |
+| `JWT_SECRET` | La clave que firma los tokens (distinta de la de local) |
+| `CORS_ORIGINS` | La dirección del frontend en Vercel |
+| `SPRING_PROFILES_ACTIVE=prod` | Activa `application-prod.properties`: sin SQL en los logs y sin trazas en los errores |
+
+En el frontend, `environment.prod.ts` tiene la URL del backend en Render y `ng build` la usa en lugar de la de local.
 
 ## Cómo ejecutarlo en local
 
@@ -121,6 +150,5 @@ Los errores devuelven JSON con `{ timestamp, status, message }` y, si los datos 
 ## Próximas mejoras
 
 - Compartir un tablero con otras personas (ahora mismo puedes asignar una tarea a cualquiera, pero solo la ve el dueño del tablero).
-- Desplegar la aplicación para poder probarla desde un enlace.
 - Editar el nombre de un tablero y los datos de una tarea desde la interfaz.
 - Capturas de pantalla en este README.

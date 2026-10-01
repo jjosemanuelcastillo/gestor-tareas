@@ -1,6 +1,6 @@
 # Especificación: desplegar la aplicación
 
-> Estado: **aprobada**: decisiones del punto 7 tomadas el 2026-10-01.
+> Estado: **implementada**: la app está en <https://gestor-tareas-nine-phi.vercel.app>. Decisiones del punto 7 tomadas el 2026-10-01.
 > Igual que con el login (SDD): primero se revisa y se ajusta; después se implementa por fases, con un commit por fase, en una rama aparte (`feature/despliegue`).
 
 ## 1. Objetivo
@@ -22,7 +22,7 @@ Con un **coste de 0 €** y sin tarjeta de crédito.
 
 ```text
   Navegador
-     │  https://gestor-tareas.vercel.app        (el nombre exacto se decide al crearlo)
+     │  https://gestor-tareas-nine-phi.vercel.app
      ▼
 ┌─────────────┐   https + JWT   ┌──────────────────┐   SSL   ┌────────────────┐
 │  Frontend   │ ──────────────▶ │     Backend      │ ──────▶ │ Base de datos  │
@@ -48,20 +48,20 @@ Con un **coste de 0 €** y sin tarjeta de crédito.
 ### 4.1 Funcionales
 
 - [ ] La app funciona en internet igual que en local: registro, login, tableros, tareas, modo oscuro y responsive.
-- [ ] Todo va por **HTTPS** (frontend y backend).
-- [ ] Recargar la página en cualquier ruta (por ejemplo `/boards/3`) no da error 404: el servidor del frontend tiene que devolver siempre la app de Angular.
+- [x] Todo va por **HTTPS** (frontend y backend).
+- [x] Recargar la página en cualquier ruta (por ejemplo `/boards/3`) no da error 404: el servidor del frontend tiene que devolver siempre la app de Angular.
 - [ ] Si el backend está "dormido", al abrir la app sale un aviso del tipo *"Despertando el servidor, puede tardar hasta un minuto…"* en vez de un error.
-- [ ] Cada `push` a `master` despliega solo la nueva versión (frontend y backend).
-- [ ] El README tiene el **enlace a la demo**.
+- [x] Cada `push` a `master` despliega solo la nueva versión (frontend y backend).
+- [x] El README tiene el **enlace a la demo**.
 
 ### 4.2 Seguridad en producción
 
-- [ ] `JWT_SECRET` de producción **distinto** del de local, aleatorio, y solo en el panel de Render.
-- [ ] La contraseña de la base de datos, solo en el panel de Render (nunca en GitHub).
-- [ ] El CORS de producción solo permite el dominio exacto del frontend, no `*`.
-- [ ] Los errores 500 **no** devuelven la traza de Java.
-- [ ] No se muestran las consultas SQL en los logs de producción (`show-sql` desactivado).
-- [ ] La conexión a la base de datos va cifrada (SSL), como exige Aiven.
+- [x] `JWT_SECRET` de producción **distinto** del de local, aleatorio, y solo en el panel de Render.
+- [x] La contraseña de la base de datos, solo en el panel de Render (nunca en GitHub).
+- [x] El CORS de producción solo permite el dominio exacto del frontend, no `*`.
+- [x] Los errores 500 **no** devuelven la traza de Java.
+- [x] No se muestran las consultas SQL en los logs de producción (`show-sql` desactivado).
+- [x] La conexión a la base de datos va cifrada (SSL), como exige Aiven.
 
 ### 4.3 Fuera de esta especificación
 
@@ -130,18 +130,18 @@ Hay pasos que **solo puedes hacer tú**, porque son tu cuenta y tus contraseñas
 
 ### Fase 3: crear los servicios y desplegar
 
-1. [ ] Aiven: crear el MySQL gratuito.
-2. [ ] Render: crear el servicio web desde GitHub (con el `Dockerfile`) y poner las variables de entorno.
-3. [ ] Vercel: crear el proyecto desde GitHub (carpeta `frontend`).
-4. [ ] Poner la URL de Render en `environment.prod.ts` y la de Vercel en `CORS_ORIGINS`.
+1. [x] Aiven: crear el MySQL gratuito.
+2. [x] Render: crear el servicio web desde GitHub (con el `Dockerfile`) y poner las variables de entorno.
+3. [x] Vercel: crear el proyecto desde GitHub (carpeta `frontend`).
+4. [x] Poner la URL de Render en `environment.prod.ts` y la de Vercel en `CORS_ORIGINS`.
 
 ### Fase 4: comprobar y cerrar
 
-1. [ ] Probar en internet: registro, login, crear y borrar, dos cuentas, recargar en una ruta, móvil.
-2. [ ] Comprobar la seguridad: HTTPS, CORS solo desde Vercel, errores sin traza.
-3. [ ] README con el enlace a la demo y una nota sobre el arranque lento del plan gratuito.
-4. [ ] Pull Request a `master`.
-5. [ ] Apuntes con lo aprendido.
+1. [ ] Probar en internet: registro, login, crear y borrar, dos cuentas, recargar en una ruta, móvil. *(La API ya está probada con `curl`: registro, tableros con tildes, 401 sin token y errores sin traza. Falta la prueba desde el navegador con una cuenta.)*
+2. [x] Comprobar la seguridad: HTTPS, CORS solo desde Vercel, errores sin traza.
+3. [x] README con el enlace a la demo y una nota sobre el arranque lento del plan gratuito.
+4. [x] Pull Request a `master` (#3). La URL de Render y este cierre fueron directos a `master`: solo son configuración y documentación.
+5. [x] Apuntes con lo aprendido.
 
 ### Fase 5: integración continua
 
