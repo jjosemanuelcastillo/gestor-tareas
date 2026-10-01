@@ -1,10 +1,10 @@
 <div class="bg-white dark:bg-gray-800 min-h-screen">
   <header class="relative flex justify-between items-center p-4">
     <h1 class="text-gray-900 dark:text-white text-xl font-bold">
-      <a routerLink="/">Gestor de tareas</a>
+      <a routerLink="/" class="inline-block py-2 -my-2">Gestor de tareas</a>
     </h1>
 
-    <button type="button" (click)="toggleMenu()" class="relative w-8 h-8 flex flex-col justify-center items-center gap-1.5"
+    <button type="button" (click)="toggleMenu()" class="relative w-10 h-10 flex flex-col justify-center items-center gap-1.5"
       [attr.aria-label]="menuAbierto() ? 'Cerrar menú' : 'Abrir menú'" [attr.aria-expanded]="menuAbierto()">
       <span class="block h-0.5 w-6 bg-gray-900 dark:bg-white transition-transform" [class.rotate-45]="menuAbierto()"
         [class.translate-y-2]="menuAbierto()"></span>

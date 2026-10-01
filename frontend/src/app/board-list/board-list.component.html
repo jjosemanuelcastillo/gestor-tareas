@@ -39,13 +39,14 @@
           [routerLink]="['/boards', board.id]"
           class="group relative block p-4 rounded-lg shadow bg-gray-100 dark:bg-gray-700 hover:shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 transition"
         >
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white pr-8">{{ board.nombre }}</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white pr-10 wrap-break-word">{{ board.nombre }}</h3>
           @if (board.descripcion) {
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ board.descripcion }}</p>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300 wrap-break-word">{{ board.descripcion }}</p>
           }
           <button
+            type="button"
             (click)="borrarBoard(board, $event)"
-            class="absolute top-3 right-3 text-gray-400 hover:text-red-600"
+            class="absolute top-2 right-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-600 hover:bg-gray-300/60 dark:hover:bg-gray-500/60"
             aria-label="Borrar tablero"
             title="Borrar tablero"
           >
