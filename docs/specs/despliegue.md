@@ -123,10 +123,10 @@ Hay pasos que **solo puedes hacer tú**, porque son tu cuenta y tus contraseñas
 
 ### Fase 2: frontend preparado para producción
 
-1. [ ] `environment.ts` y `environment.prod.ts`, y que los servicios y el interceptor usen la URL de ahí.
-2. [ ] `vercel.json` con la regla para las rutas.
-3. [ ] Aviso de "servidor despertando".
-4. [ ] Tests de lo anterior.
+1. [x] `environment.ts` y `environment.prod.ts`, y que los servicios y el interceptor usen la URL de ahí.
+2. [x] `vercel.json` con la regla para las rutas.
+3. [x] Aviso de "servidor despertando".
+4. [x] Tests de lo anterior.
 
 ### Fase 3: crear los servicios y desplegar
 

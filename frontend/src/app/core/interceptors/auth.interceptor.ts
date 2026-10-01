@@ -2,8 +2,9 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api/';
+const API = `${environment.apiUrl}/`;
 const RUTAS_PUBLICAS = [`${API}auth/login`, `${API}auth/register`];
 
 /**

@@ -2,13 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Board } from '../models/board.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BoardService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/boards';
+  private baseUrl = `${environment.apiUrl}/boards`;
   constructor() { }
 
   getAll(): Observable<Board[]>{
