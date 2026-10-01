@@ -3,56 +3,52 @@ package com.example.gestor_tareas.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.gestor_tareas.exception.ResourceNotFoundException;
-import com.example.gestor_tareas.model.Task;
-import com.example.gestor_tareas.repository.TaskRepository;
+import com.example.gestor_tareas.dto.TaskRequest;
+import com.example.gestor_tareas.dto.TaskResponse;
+import com.example.gestor_tareas.service.TaskService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
 
 	@Autowired
-	private TaskRepository taskRepository;
+	private TaskService taskService;
 
 	@GetMapping
-	public List<Task> getAllTasks(@RequestParam(required = false) Long boardId) {
-		if (boardId != null) {
-			return taskRepository.findByBoardId(boardId);
-		}
-		return taskRepository.findAll();
+	public List<TaskResponse> getAllTasks(@RequestParam(required = false) Long boardId,
+			@AuthenticationPrincipal Jwt jwt) {
+		return taskService.listar(boardId, usuario(jwt));
 	}
 
 	@GetMapping("/{id}")
-	public Task getTaskById(@PathVariable Long id) {
-		return taskRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Task no encontrada con id " + id));
+	public TaskResponse getTaskById(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+		return taskService.obtener(id, usuario(jwt));
 	}
 
 	@PostMapping()
-	public Task createTask(@RequestBody Task task) {
-		return taskRepository.save(task);
+	public TaskResponse createTask(@Valid @RequestBody TaskRequest request, @AuthenticationPrincipal Jwt jwt) {
+		return taskService.crear(request, usuario(jwt));
 	}
 
 	@PutMapping("/{id}")
-	public Task updateTask(@PathVariable Long id, @RequestBody Task taskDetails) {
-		Task task = taskRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Task no encontrada con id " + id));
-
-		task.setTitulo(taskDetails.getTitulo());
-		task.setDescripcion(taskDetails.getDescripcion());
-		task.setEstado(taskDetails.getEstado());
-		task.setBoard(taskDetails.getBoard());
-		task.setAssignedUser(taskDetails.getAssignedUser());
-		return taskRepository.save(task);
+	public TaskResponse updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequest request,
+			@AuthenticationPrincipal Jwt jwt) {
+		return taskService.actualizar(id, request, usuario(jwt));
 	}
 
 	@DeleteMapping("/{id}")
-	public void deleteTask(@PathVariable Long id) {
-		if (!taskRepository.existsById(id)) {
-			throw new ResourceNotFoundException("Task no encontrada con id " + id);
-		}
-		taskRepository.deleteById(id);
+	public void deleteTask(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+		taskService.borrar(id, usuario(jwt));
+	}
+
+	/** El id del usuario que ha iniciado sesión: va en el "sub" del token. */
+	private Long usuario(Jwt jwt) {
+		return Long.valueOf(jwt.getSubject());
 	}
 }

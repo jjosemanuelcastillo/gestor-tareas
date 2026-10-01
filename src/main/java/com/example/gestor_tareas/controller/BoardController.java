@@ -3,60 +3,55 @@ package com.example.gestor_tareas.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.gestor_tareas.exception.ResourceNotFoundException;
-import com.example.gestor_tareas.model.Board;
-import com.example.gestor_tareas.repository.BoardRepository;
-import com.example.gestor_tareas.repository.TaskRepository;
+import com.example.gestor_tareas.dto.BoardRequest;
+import com.example.gestor_tareas.dto.BoardResponse;
+import com.example.gestor_tareas.service.BoardService;
 
+import jakarta.validation.Valid;
+
+/**
+ * El controlador solo recibe la petición y responde. La lógica (y las comprobaciones de
+ * "¿este tablero es tuyo?") está en BoardService.
+ */
 @RestController
 @RequestMapping("/api/boards")
 public class BoardController {
 
 	@Autowired
-	private BoardRepository boardRepository;
-
-	@Autowired
-	private TaskRepository taskRepository;
+	private BoardService boardService;
 
 	@GetMapping
-	public List<Board> getAllBoards() {
-		return boardRepository.findAll();
+	public List<BoardResponse> getAllBoards(@AuthenticationPrincipal Jwt jwt) {
+		return boardService.listar(usuario(jwt));
 	}
 
 	@GetMapping("/{id}")
-	public Board getBoardById(@PathVariable Long id) {
-		return boardRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Board no encontrado con id " + id));
+	public BoardResponse getBoardById(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+		return boardService.obtener(id, usuario(jwt));
 	}
 
 	@PostMapping()
-	public Board createBoard(@RequestBody Board board) {
-		return boardRepository.save(board);
+	public BoardResponse createBoard(@Valid @RequestBody BoardRequest request, @AuthenticationPrincipal Jwt jwt) {
+		return boardService.crear(request, usuario(jwt));
 	}
 
 	@PutMapping("/{id}")
-	public Board updateBoard(@PathVariable Long id, @RequestBody Board boardDetails) {
-		Board board = boardRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Board no encontrado con id " + id));
-
-		board.setNombre(boardDetails.getNombre());
-		board.setDescripcion(boardDetails.getDescripcion());
-		board.setOwner(boardDetails.getOwner());
-		return boardRepository.save(board);
+	public BoardResponse updateBoard(@PathVariable Long id, @Valid @RequestBody BoardRequest request,
+			@AuthenticationPrincipal Jwt jwt) {
+		return boardService.actualizar(id, request, usuario(jwt));
 	}
 
-	// Las tareas apuntan a su tablero (board_id), así que hay que borrarlas primero.
-	// @Transactional hace que las dos cosas vayan juntas: o se borra todo o nada.
 	@DeleteMapping("/{id}")
-	@Transactional
-	public void deleteBoard(@PathVariable Long id) {
-		if (!boardRepository.existsById(id)) {
-			throw new ResourceNotFoundException("Board no encontrado con id " + id);
-		}
-		taskRepository.deleteByBoardId(id);
-		boardRepository.deleteById(id);
+	public void deleteBoard(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+		boardService.borrar(id, usuario(jwt));
+	}
+
+	/** El id del usuario que ha iniciado sesión: va en el "sub" del token. */
+	private Long usuario(Jwt jwt) {
+		return Long.valueOf(jwt.getSubject());
 	}
 }

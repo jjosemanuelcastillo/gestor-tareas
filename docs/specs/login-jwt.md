@@ -1,6 +1,6 @@
 # Especificación: registro e inicio de sesión con JWT
 
-> Estado: **borrador, pendiente de revisar**.
+> Estado: **implementada** (fases 1 a 4). Decisiones del punto 6 tomadas el 2026-10-01.
 > Esta especificación se escribe antes de programar (SDD). Primero se revisa y se ajusta; después se implementa tarea por tarea, con un commit por fase.
 
 ## 1. Objetivo
@@ -139,39 +139,49 @@ Hoy hay 2 tableros sin dueño y 2 personas (jose y carmen) sin contraseña.
 
 ### Fase 1: backend, cuentas y tokens
 
-1. [ ] Añadir las dependencias de Spring Security y del *resource server*.
-2. [ ] `User`: campo `password` (sin salir en el JSON) y `email` único.
-3. [ ] DTOs de registro, login y respuesta, con validación (`@NotBlank`, `@Email`, `@Size`).
-4. [ ] `SecurityConfig` y `JwtConfig`: rutas públicas, BCrypt, firma y validación de tokens, CORS, 401 en JSON.
-5. [ ] `AuthService` + `AuthController`: registro, login y `/me`.
-6. [ ] Errores 400 de validación y 409 de email repetido en el `GlobalExceptionHandler`.
-7. [ ] Tests: registro, email repetido, login correcto e incorrecto, petición sin token → 401.
+1. [x] Añadir las dependencias de Spring Security y del *resource server*.
+2. [x] `User`: campo `password` (sin salir en el JSON) y `email` único.
+3. [x] DTOs de registro, login y respuesta, con validación (`@NotBlank`, `@Email`, `@Size`).
+4. [x] `SecurityConfig` (incluye también la firma y validación de tokens; no hizo falta un `JwtConfig` aparte): rutas públicas, BCrypt, CORS, 401 en JSON.
+5. [x] `AuthService` + `AuthController`: registro, login y `/me`.
+6. [x] Errores 400 de validación y 409 de email repetido en el `GlobalExceptionHandler`.
+7. [x] Tests: registro, email repetido, login correcto e incorrecto, petición sin token → 401.
+8. [x] `/api/users` pasa a ser solo de lectura y devuelve solo `id` y `nombre` (las cuentas se crean en `/api/auth/register`).
 
 ### Fase 2: backend, cada uno lo suyo
 
-1. [ ] `BoardService`: el dueño se pone en el servidor; listar, ver, editar y borrar solo los propios (si no → 404).
-2. [ ] `TaskService`: lo mismo para las tareas, a través de su tablero.
-3. [ ] Los controladores pasan a usar los servicios.
-4. [ ] Tests: un usuario no puede ver ni tocar los tableros ni las tareas de otro.
+1. [x] `BoardService`: el dueño se pone en el servidor; listar, ver, editar y borrar solo los propios (si no → 404).
+2. [x] `TaskService`: lo mismo para las tareas, a través de su tablero.
+3. [x] Los controladores pasan a usar los servicios.
+4. [x] Tests: un usuario no puede ver ni tocar los tableros ni las tareas de otro.
+5. [x] DTOs de entrada y salida para tableros y tareas, con validación (nombre y título obligatorios, estado solo `pendiente`, `en_progreso` o `completada`). Las respuestas no llevan el dueño ni el email de las personas.
 
 ### Fase 3: frontend, entrar y salir
 
-1. [ ] `AuthService`, interceptor y guards.
-2. [ ] Pantallas de inicio de sesión y registro (Tailwind, modo oscuro, responsive).
-3. [ ] Rutas protegidas y redirecciones.
-4. [ ] Cabecera con el nombre y "Cerrar sesión". Aviso de "sesión caducada".
-5. [ ] Tests de lo anterior.
+1. [x] `AuthService`, interceptor y guards.
+2. [x] Pantallas de inicio de sesión y registro (Tailwind, modo oscuro, responsive).
+3. [x] Rutas protegidas y redirecciones.
+4. [x] Cabecera con el nombre y "Cerrar sesión". Aviso de "sesión caducada".
+5. [x] Tests de lo anterior.
 
 ### Fase 4: cierre
 
-1. [ ] Probarlo todo de punta a punta con dos cuentas distintas.
-2. [ ] Actualizar el `README` (cómo funciona el login, la variable `JWT_SECRET`) y el `CLAUDE.md`.
-3. [ ] Añadir a los apuntes lo aprendido.
+1. [x] Probarlo todo de punta a punta con dos cuentas distintas.
+2. [x] Actualizar el `README` (cómo funciona el login, la variable `JWT_SECRET`) y el `CLAUDE.md`.
+3. [x] Añadir a los apuntes lo aprendido.
+4. [ ] Pull Request de `feature/login-jwt` a `master` y unirlo.
 
-## 6. Decisiones pendientes (para revisar)
+## 6. Decisiones
 
-1. **Datos actuales:** ¿se puede vaciar la base de datos de desarrollo? *(Recomendado: sí.)*
-2. **Duración del token:** 8 horas. ¿Más, menos?
+**Tomadas:**
+
+1. **Datos actuales:** se vacía la base de datos de desarrollo.
+2. **Duración del token:** 8 horas.
+3. **Asignar tareas:** opción **a**. Se puede asignar a cualquier usuario registrado (solo se muestra el nombre). "Compartir tableros" queda como siguiente mejora.
+4. **Ramas:** todo se hace en la rama `feature/login-jwt` y se une a `master` al terminar, para no dejar la app rota entre fases.
+
+**Planteamiento original del punto 3** (para el registro):
+
 3. **Asignar tareas a personas:** con cuentas, cada tablero es de una sola persona y nadie más lo ve. Si asigno una tarea a otro usuario, **esa persona no la verá**, porque no ve mi tablero. Opciones:
    - **a)** Dejar el desplegable como está (cualquier usuario registrado, mostrando solo el nombre) y dejar "compartir tableros" para más adelante. Es más sencillo, pero un poco incoherente.
    - **b)** Quitar por ahora el desplegable de persona y volver a ponerlo cuando se puedan compartir tableros.

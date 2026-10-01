@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { ThemeService } from './core/services/theme.service';
+import { AuthService } from './core/services/auth.service';
 import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -11,6 +12,7 @@ import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.c
 })
 export class AppComponent {
   theme = inject(ThemeService);
+  auth = inject(AuthService);
   menuAbierto = signal(false);
 
   toggleMenu(): void {
@@ -20,5 +22,10 @@ export class AppComponent {
   cambiarTema(): void {
     this.theme.toggleTheme();
     this.menuAbierto.set(false);
+  }
+
+  cerrarSesion(): void {
+    this.menuAbierto.set(false);
+    this.auth.logout();
   }
 }

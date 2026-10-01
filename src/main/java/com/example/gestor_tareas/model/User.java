@@ -1,5 +1,7 @@
 package com.example.gestor_tareas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,5 +19,11 @@ public class User {
 	private Long id;
 
 	private String nombre;
+
+	@Column(unique = true)
 	private String email;
+
+	// Contraseña cifrada con BCrypt. @JsonIgnore: nunca sale en ninguna respuesta de la API
+	@JsonIgnore
+	private String password;
 }
