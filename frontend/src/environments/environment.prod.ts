@@ -2,5 +2,5 @@
 // apiUrl es la dirección del backend en Render.
 export const environment = {
   production: true,
-  apiUrl: 'https://gestor-tareas-api.onrender.com/api',
+  apiUrl: 'https://gestor-tareas-api-gp5g.onrender.com/api',
 };
