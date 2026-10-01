@@ -1,5 +1,7 @@
 # Gestor de tareas
 
+[![Tests](https://github.com/jjosemanuelcastillo/gestor-tareas/actions/workflows/tests.yml/badge.svg)](https://github.com/jjosemanuelcastillo/gestor-tareas/actions/workflows/tests.yml)
+
 Un gestor de tareas estilo Trello: creas una cuenta, organizas tu trabajo en tableros y, dentro de cada tablero, mueves las tareas entre **Pendiente**, **En progreso** y **Completada**.
 
 Es un proyecto personal para practicar una aplicación completa: una API REST con Spring Boot protegida con JWT y un frontend en Angular que la consume.

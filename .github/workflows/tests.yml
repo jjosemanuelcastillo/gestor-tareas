@@ -1,0 +1,55 @@
+# Integración continua: en cada push y en cada Pull Request, GitHub pasa los tests
+# del backend y del frontend y comprueba que la imagen de Docker se construye.
+# Si algo falla, sale una cruz roja en el commit; si todo va bien, una marca verde.
+name: Tests
+
+on:
+  push:
+    branches: [master, 'feature/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (Spring Boot)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      # Los tests usan H2 en memoria y su propia clave: no hace falta MySQL ni secretos
+      - name: Tests
+        run: ./mvnw -B test
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Tests
+        run: npx ng test --watch=false --browsers=ChromeHeadless
+      - name: Build de producción
+        run: npx ng build
+
+  docker:
+    name: Imagen Docker del backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Construir la imagen (la misma que usará Render)
+        run: docker build -t gestor-tareas-backend .

@@ -145,8 +145,8 @@ Hay pasos que **solo puedes hacer tú**, porque son tu cuenta y tus contraseñas
 
 ### Fase 5: integración continua
 
-1. [ ] GitHub Actions: compilar y pasar los tests del backend y del frontend en cada push y en cada Pull Request.
-2. [ ] La marca de los tests en el README.
+1. [x] GitHub Actions: compilar y pasar los tests del backend y del frontend en cada push y en cada Pull Request.
+2. [x] La marca de los tests en el README.
 
 ## 7. Decisiones
 
