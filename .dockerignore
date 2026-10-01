@@ -1,0 +1,20 @@
+# Lo que NO se manda a Docker al construir la imagen del backend
+target/
+frontend/
+docs/
+.git/
+.github/
+.claude/
+.mvn/wrapper/maven-wrapper.jar
+
+# Secretos locales: nunca dentro de una imagen
+.env.properties
+
+# Archivos de los editores
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+*.md

@@ -45,4 +45,19 @@
 
   <!-- Ventana de confirmación compartida por toda la app (la abre ConfirmService) -->
   <app-confirm-dialog />
+
+  <!-- Aviso cuando el backend tarda en responder (en el plan gratuito, al despertar) -->
+  @if (servidor.despertando()) {
+  <div role="status" aria-live="polite"
+    class="fixed bottom-4 inset-x-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 p-4 rounded-lg shadow-lg flex items-start gap-3 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 text-blue-900 dark:text-blue-100">
+    <svg aria-hidden="true" class="shrink-0 w-5 h-5 mt-0.5 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25" />
+      <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+    </svg>
+    <div>
+      <p class="font-semibold">Despertando el servidor…</p>
+      <p class="mt-1 text-sm">El servidor se apaga cuando nadie lo usa. La primera vez puede tardar hasta un minuto.</p>
+    </div>
+  </div>
+  }
 </div>

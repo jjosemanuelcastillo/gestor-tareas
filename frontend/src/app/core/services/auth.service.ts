@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegistroRequest, Usuario } from '../models/auth.model';
+import { environment } from '../../../environments/environment';
 
 const CLAVE_TOKEN = 'token';
 const CLAVE_USUARIO = 'usuario';
@@ -41,7 +42,7 @@ function leerUsuarioGuardado(): Usuario | null {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private baseUrl = 'http://localhost:8080/api/auth';
+  private baseUrl = `${environment.apiUrl}/auth`;
 
   private usuarioActual = signal<Usuario | null>(leerUsuarioGuardado());
   /** El usuario que ha iniciado sesión, o null si no hay sesión. */

@@ -4,6 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
 import { AuthService } from './core/services/auth.service';
+import { ServidorService } from './core/services/servidor.service';
 import { borrarSesionDePrueba, guardarSesionDePrueba } from './core/testing/token-de-prueba';
 
 describe('AppComponent', () => {
@@ -69,5 +70,22 @@ describe('AppComponent', () => {
 
     expect(logout).toHaveBeenCalled();
     expect(fixture.componentInstance.menuAbierto()).toBeFalse();
+  });
+
+  it('should show the "waking up the server" notice only while the server is slow', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const servidor = TestBed.inject(ServidorService);
+    const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    fixture.detectChanges();
+    expect(texto()).not.toContain('Despertando el servidor');
+
+    servidor.empiezaPeticionLenta();
+    fixture.detectChanges();
+    expect(texto()).toContain('Despertando el servidor');
+
+    servidor.terminaPeticionLenta();
+    fixture.detectChanges();
+    expect(texto()).not.toContain('Despertando el servidor');
   });
 });
