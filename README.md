@@ -31,9 +31,19 @@ Necesitas tener MySQL corriendo en local, con una base de datos llamada `gestor_
 
 **Backend** (desde la raíz del proyecto):
 
-```bash
-./mvnw spring-boot:run
-```
+1. Crea tu archivo de secretos copiando el de ejemplo, y pon una clave aleatoria de al menos 32 caracteres en `JWT_SECRET` (dentro del ejemplo se explica cómo generarla). Este archivo está en el `.gitignore` y no se sube nunca.
+
+   ```bash
+   cp .env.properties.example .env.properties
+   ```
+
+   En producción, en vez del archivo se define la variable de entorno `JWT_SECRET`. Sin ella, la aplicación no arranca.
+
+2. Arranca el backend:
+
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
 Arranca en `http://localhost:8080`. Revisa `src/main/resources/application.properties` si tu MySQL usa un usuario o contraseña distintos a `root` sin contraseña.
 
